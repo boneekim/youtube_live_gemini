@@ -35,9 +35,10 @@ const translationMap = {
 
 async function searchVideos() {
     const query = searchInput.value.trim();
-    const selectedOption = countrySelect.options[countrySelect.selectedIndex];
-    const countryName = selectedOption.text;
-    const countryCode = selectedOption.value;
+    // 국가 선택 기능은 유지하되, 검색 조건에서는 제외
+    // const selectedOption = countrySelect.options[countrySelect.selectedIndex];
+    // const countryName = selectedOption.text;
+    // const countryCode = selectedOption.value;
 
     if (!query) {
         videoList.innerHTML = '';
@@ -56,18 +57,15 @@ async function searchVideos() {
         finalQuery = `${query}|${translatedQuery}`;
     }
 
-    if (countryCode) {
-        finalQuery = `${countryName} (${finalQuery})`
-    }
-
     // 뉴스 제외 키워드 추가
     finalQuery += " -뉴스 -news";
 
     let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(finalQuery)}&type=video&eventType=live&key=${API_KEY}&maxResults=50`;
 
-    if (countryCode) {
-        searchUrl += `&regionCode=${countryCode}`;
-    }
+    // 국가 코드에 따른 지역 필터링 제거
+    // if (countryCode) {
+    //     searchUrl += `&regionCode=${countryCode}`;
+    // }
 
     try {
         const searchResponse = await fetch(searchUrl);
@@ -105,9 +103,27 @@ function displayVideos(videos) {
         return;
     }
 
+    const requiredKeywords = ['4k', 'live', 'cam', 'streaming'];
+
     const playableLiveVideos = videos.filter(video => {
+        const title = video.snippet.title ? video.snippet.title.toLowerCase() : '';
+        const description = video.snippet.description ? video.snippet.description.toLowerCase() : '';
+
+        // 사용자 키워드 또는 번역어가 제목 또는 설명에 포함되는지 확인
+        let hasUserKeyword = title.includes(query) || description.includes(query);
+        if (translatedQuery) {
+            hasUserKeyword = hasUserKeyword || title.includes(translatedQuery) || description.includes(translatedQuery);
+        }
+
+        // '4K', 'live', 'cam', 'streaming' 중 하나라도 제목 또는 설명에 포함되는지 확인
+        const hasRequiredKeyword = requiredKeywords.some(keyword =>
+            title.includes(keyword) || description.includes(keyword)
+        );
+
         return video.snippet.liveBroadcastContent === 'live' &&
-               video.status.embeddable;
+               video.status.embeddable &&
+               hasUserKeyword &&
+               hasRequiredKeyword;
     });
 
     resultsCount.textContent = `총 ${playableLiveVideos.length}개의 라이브 영상을 찾았습니다.`;
