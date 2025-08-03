@@ -106,13 +106,8 @@ function displayVideos(videos) {
     }
 
     const playableLiveVideos = videos.filter(video => {
-        const title = video.snippet.title.toLowerCase();
-        const hasOriginal = title.includes(query);
-        const hasTranslated = translatedQuery ? title.includes(translatedQuery) : false;
-
         return video.snippet.liveBroadcastContent === 'live' &&
-               video.status.embeddable &&
-               (hasOriginal || hasTranslated);
+               video.status.embeddable;
     });
 
     resultsCount.textContent = `총 ${playableLiveVideos.length}개의 라이브 영상을 찾았습니다.`;
