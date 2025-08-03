@@ -72,15 +72,19 @@ async function searchVideos() {
 
 function displayVideos(videos) {
     videoList.innerHTML = '';
+    const query = searchInput.value.trim().toLowerCase();
 
     if (!videos || videos.length === 0) {
         videoList.innerHTML = '<p>검색 결과가 없습니다.</p>';
         return;
     }
 
-    const playableLiveVideos = videos.filter(video => 
-        video.snippet.liveBroadcastContent === 'live' && video.status.embeddable
-    );
+    const playableLiveVideos = videos.filter(video => {
+        const title = video.snippet.title.toLowerCase();
+        return video.snippet.liveBroadcastContent === 'live' &&
+               video.status.embeddable &&
+               title.includes(query);
+    });
 
     if (playableLiveVideos.length === 0) {
         videoList.innerHTML = '<p>현재 재생 가능한 실시간 영상이 없습니다.</p>';
