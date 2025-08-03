@@ -9,6 +9,11 @@ const backButton = document.getElementById('back-button');
 const searchContainer = document.getElementById('search-container');
 const resultsContainer = document.getElementById('results-container');
 
+const searchTab = document.getElementById('search-tab');
+const favoritesTab = document.getElementById('favorites-tab');
+const favoritesContainer = document.getElementById('favorites-container');
+const favoritesList = document.getElementById('favorites-list');
+
 searchButton.addEventListener('click', searchVideos);
 searchInput.addEventListener('keyup', (event) => {
     if (event.key === 'Enter') {
@@ -17,6 +22,9 @@ searchInput.addEventListener('keyup', (event) => {
 });
 
 backButton.addEventListener('click', goBackToList);
+
+searchTab.addEventListener('click', () => switchTab('search'));
+favoritesTab.addEventListener('click', () => switchTab('favorites'));
 
 const countrySelect = document.getElementById('country-select');
 const resultsCount = document.getElementById('results-count');
@@ -35,11 +43,6 @@ const translationMap = {
 
 async function searchVideos() {
     const query = searchInput.value.trim();
-    // 국가 선택 기능은 유지하되, 검색 조건에서는 제외
-    // const selectedOption = countrySelect.options[countrySelect.selectedIndex];
-    // const countryName = selectedOption.text;
-    // const countryCode = selectedOption.value;
-
     if (!query) {
         videoList.innerHTML = '';
         resultsCount.textContent = '';
@@ -52,20 +55,13 @@ async function searchVideos() {
     let finalQuery = query;
     const translatedQuery = translationMap[query.toLowerCase()];
 
-    // 번역된 키워드가 있으면 OR 조건으로 함께 검색
     if (translatedQuery) {
         finalQuery = `${query}|${translatedQuery}`;
     }
 
-    // 뉴스 제외 키워드 추가
     finalQuery += " -뉴스 -news";
 
     let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(finalQuery)}&type=video&eventType=live&key=${API_KEY}&maxResults=50`;
-
-    // 국가 코드에 따른 지역 필터링 제거
-    // if (countryCode) {
-    //     searchUrl += `&regionCode=${countryCode}`;
-    // }
 
     try {
         const searchResponse = await fetch(searchUrl);
@@ -93,7 +89,7 @@ async function searchVideos() {
 
 function displayVideos(videos) {
     videoList.innerHTML = '';
-    resultsCount.textContent = ''; // 카운트 초기화
+    resultsCount.textContent = '';
     const query = searchInput.value.trim().toLowerCase();
     const translatedQuery = translationMap[query];
 
@@ -109,13 +105,11 @@ function displayVideos(videos) {
         const title = video.snippet.title ? video.snippet.title.toLowerCase() : '';
         const description = video.snippet.description ? video.snippet.description.toLowerCase() : '';
 
-        // 사용자 키워드 또는 번역어가 제목 또는 설명에 포함되는지 확인
         let hasUserKeyword = title.includes(query) || description.includes(query);
         if (translatedQuery) {
             hasUserKeyword = hasUserKeyword || title.includes(translatedQuery) || description.includes(translatedQuery);
         }
 
-        // '4K', 'live', 'cam', 'streaming' 중 하나라도 제목 또는 설명에 포함되는지 확인
         const hasRequiredKeyword = requiredKeywords.some(keyword =>
             title.includes(keyword) || description.includes(keyword)
         );
@@ -137,6 +131,7 @@ function displayVideos(videos) {
         const videoId = video.id;
         const title = video.snippet.title;
         const thumbnailUrl = video.snippet.thumbnails.medium.url;
+        const isFav = isFavorite(videoId);
 
         const videoItem = document.createElement('div');
         videoItem.classList.add('video-item');
@@ -145,9 +140,15 @@ function displayVideos(videos) {
         videoItem.innerHTML = `
             <img src="${thumbnailUrl}" alt="${title}">
             <div class="title">${title}</div>
+            <button class="favorite-button ${isFav ? 'favorited' : ''}" data-video-id="${videoId}">★</button>
         `;
 
-        videoItem.addEventListener('click', () => playVideo(videoId));
+        videoItem.querySelector('img').addEventListener('click', () => playVideo(videoId));
+        videoItem.querySelector('.title').addEventListener('click', () => playVideo(videoId));
+        videoItem.querySelector('.favorite-button').addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent video play when clicking favorite button
+            toggleFavorite(video);
+        });
         videoList.appendChild(videoItem);
     });
 }
@@ -155,11 +156,11 @@ function displayVideos(videos) {
 function playVideo(videoId) {
     searchContainer.classList.add('hidden');
     resultsContainer.classList.add('hidden');
+    favoritesContainer.classList.add('hidden'); // Hide favorites when playing video
     playerContainer.classList.remove('hidden');
 
     playerDiv.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&fs=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
     
-    // Ensure the iframe takes up the full space of its container
     const iframe = playerDiv.querySelector('iframe');
     iframe.style.width = '100%';
     iframe.style.height = '100%';
@@ -167,9 +168,118 @@ function playVideo(videoId) {
 
 function goBackToList() {
     playerContainer.classList.add('hidden');
-    searchContainer.classList.remove('hidden');
-    resultsContainer.classList.remove('hidden');
+    // Determine which tab was active before playing video and show it
+    if (searchTab.classList.contains('active')) {
+        searchContainer.classList.remove('hidden');
+        resultsContainer.classList.remove('hidden');
+    } else if (favoritesTab.classList.contains('active')) {
+        favoritesContainer.classList.remove('hidden');
+    }
 
-    // Stop the video by removing the iframe
     playerDiv.innerHTML = '';
 }
+
+// Favorite functions
+function getFavorites() {
+    const favorites = localStorage.getItem('youtubeFavorites');
+    return favorites ? JSON.parse(favorites) : [];
+}
+
+function saveFavorites(favorites) {
+    localStorage.setItem('youtubeFavorites', JSON.stringify(favorites));
+}
+
+function isFavorite(videoId) {
+    const favorites = getFavorites();
+    return favorites.some(video => video.id === videoId);
+}
+
+function toggleFavorite(video) {
+    let favorites = getFavorites();
+    const videoId = video.id;
+
+    if (isFavorite(videoId)) {
+        favorites = favorites.filter(favVideo => favVideo.id !== videoId);
+        alert('즐겨찾기에서 제거되었습니다.');
+    } else {
+        favorites.push(video);
+        alert('즐겨찾기에 추가되었습니다.');
+    }
+    saveFavorites(favorites);
+    // Re-render current view to update favorite status
+    if (searchTab.classList.contains('active')) {
+        // If on search tab, re-display search results to update star
+        const currentQuery = searchInput.value.trim();
+        if (currentQuery) {
+            searchVideos(); // Re-run search to update stars
+        } else {
+            // If no search query, clear video list
+            videoList.innerHTML = '';
+            resultsCount.textContent = '';
+        }
+    } else if (favoritesTab.classList.contains('active')) {
+        displayFavorites(); // If on favorites tab, re-display favorites
+    }
+}
+
+function displayFavorites() {
+    favoritesList.innerHTML = '';
+    const favorites = getFavorites();
+
+    if (favorites.length === 0) {
+        favoritesList.innerHTML = '<p>즐겨찾기된 영상이 없습니다.</p>';
+        return;
+    }
+
+    favorites.forEach(video => {
+        const videoId = video.id;
+        const title = video.snippet.title;
+        const thumbnailUrl = video.snippet.thumbnails.medium.url;
+
+        const videoItem = document.createElement('div');
+        videoItem.classList.add('video-item');
+        videoItem.dataset.videoId = videoId;
+
+        videoItem.innerHTML = `
+            <img src="${thumbnailUrl}" alt="${title}">
+            <div class="title">${title}</div>
+            <button class="favorite-button favorited" data-video-id="${videoId}">★</button>
+        `;
+
+        videoItem.querySelector('img').addEventListener('click', () => playVideo(videoId));
+        videoItem.querySelector('.title').addEventListener('click', () => playVideo(videoId));
+        videoItem.querySelector('.favorite-button').addEventListener('click', (event) => {
+            event.stopPropagation();
+            toggleFavorite(video);
+        });
+        favoritesList.appendChild(videoItem);
+    });
+}
+
+function switchTab(tabName) {
+    if (tabName === 'search') {
+        searchTab.classList.add('active');
+        favoritesTab.classList.remove('active');
+        searchContainer.classList.remove('hidden');
+        resultsContainer.classList.remove('hidden');
+        favoritesContainer.classList.add('hidden');
+        // Clear player if it was open
+        playerContainer.classList.add('hidden');
+        playerDiv.innerHTML = '';
+    } else if (tabName === 'favorites') {
+        searchTab.classList.remove('active');
+        favoritesTab.classList.add('active');
+        searchContainer.classList.add('hidden');
+        resultsContainer.classList.add('hidden');
+        favoritesContainer.classList.remove('hidden');
+        // Clear player if it was open
+        playerContainer.classList.add('hidden');
+        playerDiv.innerHTML = '';
+        displayFavorites(); // Load and display favorites when switching to this tab
+    }
+}
+
+// Initial load: ensure search tab is active and favorites are hidden
+document.addEventListener('DOMContentLoaded', () => {
+    switchTab('search');
+});

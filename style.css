@@ -5,6 +5,35 @@ body {
     margin: 0;
 }
 
+#tabs {
+    display: flex;
+    justify-content: center;
+    background-color: #1f1f1f;
+    padding: 10px 0;
+    border-bottom: 1px solid #333;
+}
+
+.tab-button {
+    background-color: #2a2a2a;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 0 5px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.tab-button:hover {
+    background-color: #3a3a3a;
+}
+
+.tab-button.active {
+    background-color: #f00;
+    color: #fff;
+}
+
 #search-container {
     text-align: center;
     padding: 20px;
@@ -54,7 +83,8 @@ body {
     border-radius: 0 5px 5px 0;
 }
 
-#results-container {
+#results-container,
+#favorites-container {
     padding: 20px;
 }
 
@@ -64,7 +94,8 @@ body {
     font-weight: bold;
 }
 
-#video-list {
+#video-list,
+#favorites-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 20px;
@@ -75,6 +106,7 @@ body {
     background-color: #1f1f1f;
     border-radius: 5px;
     overflow: hidden;
+    position: relative; /* For favorite button positioning */
 }
 
 .video-item img {
@@ -86,6 +118,31 @@ body {
 .video-item .title {
     padding: 10px;
     font-weight: bold;
+}
+
+.favorite-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    color: #ccc; /* Default star color */
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+    line-height: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.favorite-button:hover {
+    color: #fff;
+}
+
+.favorite-button.favorited {
+    color: #ffcc00; /* Gold color for favorited star */
 }
 
 #player-container {
