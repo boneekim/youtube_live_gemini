@@ -29,7 +29,7 @@ favoritesTab.addEventListener('click', () => switchTab('favorites'));
 const countrySelect = document.getElementById('country-select');
 const resultsCount = document.getElementById('results-count');
 
-// 간단한 번역 사전
+// 간단한 번역 사전 (더 이상 사용되지 않음)
 const translationMap = {
     "서울": "seoul",
     "부산": "busan",
@@ -42,24 +42,20 @@ const translationMap = {
 };
 
 async function searchVideos() {
-    const query = searchInput.value.trim();
-    if (!query) {
-        videoList.innerHTML = '';
-        resultsCount.textContent = '';
-        return;
-    }
+    // 사용자 입력 검색어 제거
+    // const query = searchInput.value.trim();
+    // if (!query) {
+    //     videoList.innerHTML = '';
+    //     resultsCount.textContent = '';
+    //     return;
+    // }
 
     videoList.innerHTML = '<p>검색 중... (재생 가능한 영상 확인 중)</p>';
     resultsCount.textContent = '';
 
-    let finalQuery = query;
-    const translatedQuery = translationMap[query.toLowerCase()];
-
-    if (translatedQuery) {
-        finalQuery = `${query}|${translatedQuery}`;
-    }
-
-    finalQuery += " -뉴스 -news";
+    // 고정된 검색어 사용
+    let finalQuery = "4k|live|cam|streaming"; // 주요 라이브 관련 키워드
+    finalQuery += " -뉴스 -news"; // 뉴스 제외 키워드 추가
 
     let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(finalQuery)}&type=video&eventType=live&key=${API_KEY}&maxResults=50`;
 
@@ -90,8 +86,9 @@ async function searchVideos() {
 function displayVideos(videos) {
     videoList.innerHTML = '';
     resultsCount.textContent = '';
-    const query = searchInput.value.trim().toLowerCase();
-    const translatedQuery = translationMap[query];
+    // 사용자 입력 검색어 관련 로직 제거
+    // const query = searchInput.value.trim().toLowerCase();
+    // const translatedQuery = translationMap[query];
 
     if (!videos || videos.length === 0) {
         resultsCount.textContent = '총 0개의 라이브 영상을 찾았습니다.';
@@ -105,18 +102,20 @@ function displayVideos(videos) {
         const title = video.snippet.title ? video.snippet.title.toLowerCase() : '';
         const description = video.snippet.description ? video.snippet.description.toLowerCase() : '';
 
-        let hasUserKeyword = title.includes(query) || description.includes(query);
-        if (translatedQuery) {
-            hasUserKeyword = hasUserKeyword || title.includes(translatedQuery) || description.includes(translatedQuery);
-        }
+        // 사용자 키워드 일치 조건 제거
+        // let hasUserKeyword = title.includes(query) || description.includes(query);
+        // if (translatedQuery) {
+        //     hasUserKeyword = hasUserKeyword || title.includes(translatedQuery) || description.includes(translatedQuery);
+        // }
 
+        // '4K', 'live', 'cam', 'streaming' 중 하나라도 제목 또는 설명에 포함되는지 확인
         const hasRequiredKeyword = requiredKeywords.some(keyword =>
             title.includes(keyword) || description.includes(keyword)
         );
 
         return video.snippet.liveBroadcastContent === 'live' &&
                video.status.embeddable &&
-               hasUserKeyword &&
+            //    hasUserKeyword && // 사용자 키워드 일치 조건 제거
                hasRequiredKeyword;
     });
 
@@ -209,14 +208,12 @@ function toggleFavorite(video) {
     // Re-render current view to update favorite status
     if (searchTab.classList.contains('active')) {
         // If on search tab, re-display search results to update star
-        const currentQuery = searchInput.value.trim();
-        if (currentQuery) {
-            searchVideos(); // Re-run search to update stars
-        } else {
-            // If no search query, clear video list
-            videoList.innerHTML = '';
-            resultsCount.textContent = '';
-        }
+        // searchVideos(); // 사용자 입력 검색어 제거로 인해 이 부분은 더 이상 필요 없음
+        // 대신, 현재 표시된 비디오 목록을 다시 렌더링하여 즐겨찾기 상태를 업데이트
+        // (이 부분은 현재 displayVideos가 전체 목록을 다시 그리기 때문에 별도 처리 불필요)
+        // 다만, 검색 결과가 없는 경우를 대비하여 빈 목록으로 초기화
+        videoList.innerHTML = '';
+        resultsCount.textContent = '';
     } else if (favoritesTab.classList.contains('active')) {
         displayFavorites(); // If on favorites tab, re-display favorites
     }
