@@ -70,8 +70,11 @@ async function searchVideos() {
     }
 }
 
+const resultsCount = document.getElementById('results-count');
+
 function displayVideos(videos) {
     videoList.innerHTML = '';
+    resultsCount.textContent = ''; // 카운트 초기화
     const query = searchInput.value.trim().toLowerCase();
 
     if (!videos || videos.length === 0) {
@@ -85,6 +88,8 @@ function displayVideos(videos) {
                video.status.embeddable &&
                title.includes(query);
     });
+
+    resultsCount.textContent = `총 ${playableLiveVideos.length}개의 라이브 영상을 찾았습니다.`;
 
     if (playableLiveVideos.length === 0) {
         videoList.innerHTML = '<p>현재 재생 가능한 실시간 영상이 없습니다.</p>';

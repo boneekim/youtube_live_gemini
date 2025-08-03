@@ -58,6 +58,12 @@ body {
     padding: 20px;
 }
 
+#results-count {
+    margin-bottom: 15px;
+    color: #ccc;
+    font-weight: bold;
+}
+
 #video-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
