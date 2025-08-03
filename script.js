@@ -19,6 +19,19 @@ searchInput.addEventListener('keyup', (event) => {
 backButton.addEventListener('click', goBackToList);
 
 const countrySelect = document.getElementById('country-select');
+const resultsCount = document.getElementById('results-count');
+
+// 간단한 번역 사전
+const translationMap = {
+    "서울": "seoul",
+    "부산": "busan",
+    "도쿄": "tokyo",
+    "오사카": "osaka",
+    "일본": "japan",
+    "뉴욕": "new york",
+    "런던": "london",
+    "파리": "paris"
+};
 
 async function searchVideos() {
     const query = searchInput.value.trim();
@@ -28,17 +41,26 @@ async function searchVideos() {
 
     if (!query) {
         videoList.innerHTML = '';
+        resultsCount.textContent = '';
         return;
     }
 
     videoList.innerHTML = '<p>검색 중... (재생 가능한 영상 확인 중)</p>';
+    resultsCount.textContent = '';
 
     let finalQuery = query;
-    if (countryCode) {
-        finalQuery = `${countryName} ${query}`;
+    const translatedQuery = translationMap[query.toLowerCase()];
+
+    // 번역된 키워드가 있으면 OR 조건으로 함께 검색
+    if (translatedQuery) {
+        finalQuery = `${query}|${translatedQuery}`;
     }
 
-    // Add exclusion for news
+    if (countryCode) {
+        finalQuery = `${countryName} (${finalQuery})`
+    }
+
+    // 뉴스 제외 키워드 추가
     finalQuery += " -뉴스 -news";
 
     let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(finalQuery)}&type=video&eventType=live&key=${API_KEY}&maxResults=50`;
@@ -53,6 +75,7 @@ async function searchVideos() {
 
         if (!searchData.items || searchData.items.length === 0) {
             videoList.innerHTML = '<p>검색 결과가 없습니다.</p>';
+            resultsCount.textContent = '총 0개의 라이브 영상을 찾았습니다.';
             return;
         }
 
@@ -70,23 +93,26 @@ async function searchVideos() {
     }
 }
 
-const resultsCount = document.getElementById('results-count');
-
 function displayVideos(videos) {
     videoList.innerHTML = '';
     resultsCount.textContent = ''; // 카운트 초기화
     const query = searchInput.value.trim().toLowerCase();
+    const translatedQuery = translationMap[query];
 
     if (!videos || videos.length === 0) {
+        resultsCount.textContent = '총 0개의 라이브 영상을 찾았습니다.';
         videoList.innerHTML = '<p>검색 결과가 없습니다.</p>';
         return;
     }
 
     const playableLiveVideos = videos.filter(video => {
         const title = video.snippet.title.toLowerCase();
+        const hasOriginal = title.includes(query);
+        const hasTranslated = translatedQuery ? title.includes(translatedQuery) : false;
+
         return video.snippet.liveBroadcastContent === 'live' &&
                video.status.embeddable &&
-               title.includes(query);
+               (hasOriginal || hasTranslated);
     });
 
     resultsCount.textContent = `총 ${playableLiveVideos.length}개의 라이브 영상을 찾았습니다.`;
