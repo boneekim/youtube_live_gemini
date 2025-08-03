@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유튜브 라이브 검색기</title>
+</head>
+<body>
+    <div id="search-container">
+        <h1>유튜브 라이브 검색기</h1>
+        <p class="subtitle">보고싶은 지역명이나 위치를 입력하면 실시간 라이브 영상을 검색해줍니다.</p>
+        <div id="search-box">
+            <select id="country-select">
+                <option value="">전체</option>
+                <option value="KR">대한민국</option>
+                <option value="JP">일본</option>
+                <option value="US">미국</option>
+                <option value="GB">영국</option>
+                <option value="FR">프랑스</option>
+                <option value="DE">독일</option>
+                <option value="IT">이탈리아</option>
+                <option value="ES">스페인</option>
+                <option value="CA">캐나다</option>
+                <option value="AU">호주</option>
+                <option value="HK">홍콩</option>
+                <option value="TW">대만</option>
+            </select>
+            <input type="text" id="search-input" placeholder="검색어 (예: 서울, 도쿄 등)를 입력하세요">
+            <button id="search-button">조회</button>
+        </div>
+    </div>
+
+    <div id="results-container">
+        <div id="video-list"></div>
+    </div>
+
+    <div id="player-container" class="hidden">
+        <div id="player-header">
+            <button id="back-button">목록으로 돌아가기</button>
+        </div>
+        <div id="player"></div>
+    </div>
+
+    <script src="script.js"></script>
+    <footer>© 2025 BnK. All rights reserved.</footer>
+</body>
+</html>
