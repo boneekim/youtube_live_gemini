@@ -1,16 +1,39 @@
 const API_KEY = 'AIzaSyAT5oQSikvEJTkydNQE3mqMuaWVNM1ZwV8';
 
+let searchInput;
+let searchButton;
+let videoList;
+let playerContainer;
+let playerDiv;
+let backButton;
+let searchContainer;
+let resultsContainer;
+let countrySelect;
+let resultsCount;
+
+// 간단한 번역 사전
+const translationMap = {
+    "서울": "seoul",
+    "부산": "busan",
+    "도쿄": "tokyo",
+    "오사카": "osaka",
+    "일본": "japan",
+    "뉴욕": "new york",
+    "런던": "london",
+    "파리": "paris"
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('search-input');
-    const searchButton = document.getElementById('search-button');
-    const videoList = document.getElementById('video-list');
-    const playerContainer = document.getElementById('player-container');
-    const playerDiv = document.getElementById('player');
-    const backButton = document.getElementById('back-button');
-    const searchContainer = document.getElementById('search-container');
-    const resultsContainer = document.getElementById('results-container');
-    const countrySelect = document.getElementById('country-select');
-    const resultsCount = document.getElementById('results-count');
+    searchInput = document.getElementById('search-input');
+    searchButton = document.getElementById('search-button');
+    videoList = document.getElementById('video-list');
+    playerContainer = document.getElementById('player-container');
+    playerDiv = document.getElementById('player');
+    backButton = document.getElementById('back-button');
+    searchContainer = document.getElementById('search-container');
+    resultsContainer = document.getElementById('results-container');
+    countrySelect = document.getElementById('country-select');
+    resultsCount = document.getElementById('results-count');
 
     searchButton.addEventListener('click', searchVideos);
     searchInput.addEventListener('keyup', (event) => {
@@ -20,18 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     backButton.addEventListener('click', goBackToList);
-
-    // 간단한 번역 사전
-    const translationMap = {
-        "서울": "seoul",
-        "부산": "busan",
-        "도쿄": "tokyo",
-        "오사카": "osaka",
-        "일본": "japan",
-        "뉴욕": "new york",
-        "런던": "london",
-        "파리": "paris"
-    };
 
     async function searchVideos() {
         const query = searchInput.value.trim();
